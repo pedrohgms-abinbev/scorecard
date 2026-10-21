@@ -1,9 +1,5 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import streamlit as st
-
-username_secret = st.secrets["USERNAME"]
-password_secret = st.secrets["PASSWORD"]
 
 st.set_page_config(
     page_title="Scorecard",
