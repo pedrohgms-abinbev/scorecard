@@ -22,7 +22,7 @@ def login_page():
 
         if submitted:
             # Replace with your authentication logic
-            if username == "USERNAME" and password == "PASSWORD":
+            if username == USERNAME and password == PASSWORD:
                 st.session_state.logged_in = True
                 st.rerun()
             else:
