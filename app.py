@@ -1,9 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.secrets["USERNAME"]
-st.secrets["PASSWORD"]
-
 st.set_page_config(
     page_title="Scorecard",
     layout="wide"
@@ -25,7 +22,7 @@ def login_page():
 
         if submitted:
             # Replace with your authentication logic
-            if username == "USERNAME" and password == "PASSWORD":
+            if username == st.secrets["USERNAME"] and password == st.secrets["PASSWORD"]:
                 st.session_state.logged_in = True
                 st.rerun()
             else:
