@@ -17,7 +17,7 @@ st.set_page_config(
 CLIENT_ID = "301a8057-a1a3-4174-bfb9-5b4996dc7fd8"
 TENANT_ID = "cef04b19-7776-4a94-b89b-375c77a8f936"
 APP_URL = "https://ecossistemagestaooffco.streamlit.app/"
-REDIRECT_URI = f"{APP_URL.rstrip('/')}/oauth2callback"
+REDIRECT_URI = f"{APP_URL.rstrip('/')}"
 
 BASE_DIR = Path(__file__).resolve().parent
 
