@@ -1,78 +1,209 @@
 from pathlib import Path
-from urllib.parse import urlencode
+import html
+
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Ambev Scorecard", page_icon="🍺", layout="wide", initial_sidebar_state="collapsed")
-CLIENT_ID = "2609a149-fd2a-409a-a4b6-700c940a1f74"
+# -----------------------------------------------------------------------------
+# Ambev Scorecard | Microsoft Entra ID SSO
+# -----------------------------------------------------------------------------
+st.set_page_config(
+    page_title="Ambev Scorecard",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
+CLIENT_ID = "301a8057-a1a3-4174-bfb9-5b4996dc7fd8"
 TENANT_ID = "cef04b19-7776-4a94-b89b-375c77a8f936"
-REDIRECT_URI = "https://scorecardoffco.streamlit.app/"
+APP_URL = "https://ecossistemagestaooffco.streamlit.app/"
+REDIRECT_URI = f"{APP_URL.rstrip('/')}/oauth2callback"
+
 BASE_DIR = Path(__file__).resolve().parent
-SCORECARD_HTML = BASE_DIR / "scorecard.html"
-HEINEKEN_HTML = BASE_DIR / "heineken_ultimate_painel_completo_v16.html"
 
-st.markdown("""
-<style>
-.stApp{background:#f5f7f8}[data-testid="stHeader"]{background:transparent}.block-container{max-width:1600px;padding-top:1.4rem;padding-bottom:2rem}
-.auth-spacer{height:7vh}.auth-card{max-width:510px;margin:0 auto;padding:2.5rem 2.7rem 2rem;border-radius:20px;border:1px solid #e3e9e8;background:#fff;box-shadow:0 12px 38px rgba(22,48,61,.09);text-align:center}
-.auth-brand{display:flex;justify-content:center;align-items:center;margin-bottom:1.2rem}.auth-brand-mark{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,#08785d,#14506b);color:#fff;font-size:30px}
-.auth-divider{height:1px;background:#e8eeec;margin:1.2rem 0}.auth-card h1{color:#173b43;font-size:1.8rem;margin:0;font-weight:700}.auth-subtitle{color:#07805f;font-size:1rem;font-weight:650;margin:.3rem 0 1rem}.auth-description{color:#687b80;font-size:.94rem;line-height:1.55;margin-bottom:1.35rem}
-.auth-button{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;box-sizing:border-box;padding:14px 18px;border-radius:9px;background:#08785d;color:white!important;text-decoration:none;font-weight:650}.auth-button:hover{background:#06664f}
-.microsoft-mark{display:grid;grid-template-columns:9px 9px;grid-template-rows:9px 9px;gap:2px}.microsoft-mark span:nth-child(1){background:#f25022}.microsoft-mark span:nth-child(2){background:#7fba00}.microsoft-mark span:nth-child(3){background:#00a4ef}.microsoft-mark span:nth-child(4){background:#ffb900}
-.auth-security{color:#87979a;font-size:.78rem;margin:1rem 0 0}.app-heading{display:flex;align-items:center;gap:14px;padding:1rem 1.25rem;border:1px solid #e2eae7;border-radius:15px;background:#fff;margin-bottom:1rem}
-.app-heading-mark{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;color:white;background:linear-gradient(145deg,#08785d,#14506b);font-size:23px;flex-shrink:0}.app-heading h1{margin:0;color:#173b43;font-size:1.35rem}.app-heading p{margin:.2rem 0 0;color:#718287;font-size:.88rem}
-div[data-testid="stTabs"] button{font-weight:650}div[data-testid="stTabs"] button[aria-selected="true"]{color:#08785d}div[data-testid="stTabs"] [data-baseweb="tab-highlight"]{background:#08785d}
-</style>
-""", unsafe_allow_html=True)
+# Cada arquivo encontrado aqui vira uma aba. Para adicionar outro painel,
+# coloque o HTML na mesma pasta do app.py e inclua o nome nesta lista.
+# O nome da aba é definido pelo campo "label".
+HTML_PANELS = [
+    {"file": "scorecard.html", "label": "Scorecard", "height": 2600},
+    {
+        "file": "radar_heineken_ultimate.html",
+        "label": "Radar Heineken Ultimate",
+        "height": 3000,
+    },
+    # Exemplo para adicionar novas abas:
+    # {"file": "novo_painel.html", "label": "Novo painel", "height": 2400},
+]
+
+# Aparência alinhada ao padrão visual do HUB enviado, adaptada ao Scorecard.
+st.markdown(
+    """
+    <style>
+      .stApp { background: #f6f8f9; }
+      [data-testid="stHeader"] { background: transparent; }
+      .block-container { max-width: 1680px; padding: 1.35rem 2rem 2rem; }
+      .auth-space { height: 7vh; }
+      .auth-card {
+        max-width: 510px; margin: 0 auto; padding: 2.25rem 2.6rem 2rem;
+        border: 1px solid #e1e9e6; border-radius: 18px; background: #fff;
+        box-shadow: 0 12px 38px rgba(20, 50, 45, .09); text-align: center;
+      }
+      .auth-logo {
+        width: 58px; height: 58px; margin: 0 auto 1.1rem; display: grid;
+        place-items: center; border-radius: 15px;
+        background: linear-gradient(145deg, #08784f, #174c62);
+        color: #fff; font-size: 28px;
+      }
+      .auth-rule { height: 1px; background: #e8eeeb; margin: 1.1rem 0; }
+      .auth-card h1 { margin: 0; color: #173b36; font-size: 1.8rem; font-weight: 750; }
+      .auth-subtitle { margin: .35rem 0 1rem; color: #08784f; font-weight: 700; }
+      .auth-copy { margin: 0 0 1.25rem; color: #687b78; font-size: .94rem; }
+      .app-masthead {
+        display: flex; align-items: center; gap: 13px; padding: 1rem 1.2rem;
+        border: 1px solid #e1e9e6; border-radius: 13px; background: #fff;
+        margin-bottom: 1rem;
+      }
+      .app-mark {
+        width: 43px; height: 43px; display: grid; place-items: center;
+        flex: 0 0 43px; border-radius: 11px; color: white; font-size: 22px;
+        background: linear-gradient(145deg, #08784f, #174c62);
+      }
+      .app-masthead h1 { margin: 0; color: #173b36; font-size: 1.35rem; }
+      .app-masthead p { margin: .15rem 0 0; color: #71827e; font-size: .86rem; }
+      div[data-testid="stTabs"] button { font-weight: 700; }
+      div[data-testid="stTabs"] button[aria-selected="true"] { color: #08784f; }
+      div[data-testid="stTabs"] [data-baseweb="tab-highlight"] { background: #08784f; }
+      div[data-testid="stTabs"] [data-baseweb="tab-list"] { gap: 5px; }
+      .user-chip { color: #657873; font-size: .82rem; text-align: right; padding-top: .35rem; }
+      iframe { border: 0; }
+      @media (max-width: 700px) {
+        .block-container { padding: 1rem .65rem 1.5rem; }
+        .auth-card { padding: 1.8rem 1.2rem; }
+        .app-masthead { padding: .8rem; }
+        .app-masthead h1 { font-size: 1.15rem; }
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
-def microsoft_login_url():
-    params = {"client_id": CLIENT_ID, "response_type": "code", "redirect_uri": REDIRECT_URI,
-              "response_mode": "query", "scope": "openid profile email User.Read"}
-    return f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/authorize?{urlencode(params)}"
-
-
-def login_page():
-    st.markdown('<div class="auth-spacer"></div>', unsafe_allow_html=True)
+def show_login() -> None:
+    st.markdown('<div class="auth-space"></div>', unsafe_allow_html=True)
     _, center, _ = st.columns([1, 1.45, 1])
     with center:
-        st.markdown(f"""
-        <div class="auth-card"><div class="auth-brand"><div class="auth-brand-mark">🍺</div></div>
-        <div class="auth-divider"></div><h1>Ambev Scorecard</h1>
-        <p class="auth-subtitle">Indicadores e acompanhamento</p>
-        <p class="auth-description">Acesse o painel com sua conta corporativa.</p>
-        <a class="auth-button" href="{microsoft_login_url()}">
-        <span class="microsoft-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-        <span>Entrar com Microsoft</span></a>
-        <p class="auth-security">Conexão segura com sua conta corporativa</p></div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="auth-card">
+              <div class="auth-logo">📊</div>
+              <div class="auth-rule"></div>
+              <h1>Ambev Scorecard</h1>
+              <p class="auth-subtitle">Acompanhamento comercial</p>
+              <p class="auth-copy">Entre com sua conta corporativa Microsoft para acessar os painéis.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.button(
+            "Entrar com Microsoft",
+            type="primary",
+            use_container_width=True,
+            on_click=st.login,
+        )
+        st.caption("Autenticação corporativa por SSO Microsoft")
 
 
-def show_html(path: Path, height: int):
-    if not path.is_file():
-        st.error(f"Não encontrei **{path.name}** na pasta do aplicativo.")
+def resolve_panels() -> list[dict]:
+    """Retorna os painéis configurados que existem ao lado deste app."""
+    panels = []
+    for item in HTML_PANELS:
+        path = BASE_DIR / item["file"]
+        if path.is_file():
+            panels.append({**item, "path": path})
+    return panels
+
+
+def render_panel(panel: dict) -> None:
+    try:
+        content = panel["path"].read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        content = panel["path"].read_text(encoding="latin-1")
+    except OSError as exc:
+        st.error(f"Não foi possível abrir {panel['file']}: {exc}")
         return
-    components.html(path.read_text(encoding="utf-8"), height=height, scrolling=True)
+
+    # O conteúdo é executado isoladamente no iframe do Streamlit.
+    components.html(
+        content,
+        height=int(panel.get("height", 2400)),
+        scrolling=True,
+    )
 
 
-# O callback aponta explicitamente para o domínio do Scorecard.
-if "code" in st.query_params:
-    st.session_state.autenticado = True
-if not st.session_state.get("autenticado", False):
-    login_page()
+# st.login usa OIDC de verdade: a identidade é validada pelo Streamlit/Authlib.
+# O segredo do cliente fica no secrets.toml, nunca neste arquivo Python.
+try:
+    auth_cfg = st.secrets["auth"]
+    auth_ready = (
+        auth_cfg.get("client_id") == CLIENT_ID
+        and bool(auth_cfg.get("client_secret"))
+        and auth_cfg.get("redirect_uri") == REDIRECT_URI
+        and bool(auth_cfg.get("cookie_secret"))
+        and bool(auth_cfg.get("server_metadata_url"))
+    )
+except Exception:
+    auth_ready = False
+
+if not auth_ready:
+    st.error("Configure a seção [auth] do .streamlit/secrets.toml para habilitar o SSO Microsoft.")
+    st.code(
+        f"[auth]\nredirect_uri = \"{REDIRECT_URI}\"\ncookie_secret = \"GERE_UM_SEGREDO_ALEATORIO_FORTE\"\nclient_id = \"{CLIENT_ID}\"\nclient_secret = \"COLE_AQUI_O_CLIENT_SECRET_DO_ENTRA_ID\"\nserver_metadata_url = \"https://login.microsoftonline.com/{TENANT_ID}/v2.0/.well-known/openid-configuration\"",
+        language="toml",
+    )
+    st.info("Mantenha as configurações existentes do Excel no secrets.toml. Apenas acrescente esta seção [auth].")
     st.stop()
 
-st.markdown("""
-<div class="app-heading"><div class="app-heading-mark">🍺</div><div><h1>Ambev Scorecard</h1><p>Painéis de acompanhamento</p></div></div>
-""", unsafe_allow_html=True)
-_, exit_col = st.columns([6, 1])
-with exit_col:
-    if st.button("Sair", use_container_width=True):
-        st.session_state.clear()
-        st.query_params.clear()
-        st.rerun()
-score_tab, heineken_tab = st.tabs(["📊 Scorecard", "🍃 Heineken Ultimate"])
-with score_tab:
-    show_html(SCORECARD_HTML, 2200)
-with heineken_tab:
-    show_html(HEINEKEN_HTML, 2600)
+# Não aceite apenas a presença de ?code= na URL como prova de autenticação.
+if not st.user.is_logged_in:
+    show_login()
+    st.stop()
+
+user_name = (
+    getattr(st.user, "name", None)
+    or getattr(st.user, "preferred_username", None)
+    or getattr(st.user, "email", None)
+    or "Usuário autenticado"
+)
+
+st.markdown(
+    """
+    <div class="app-masthead">
+      <div class="app-mark">📊</div>
+      <div>
+        <h1>Ambev Scorecard</h1>
+        <p>Painéis de performance e acompanhamento</p>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+user_col, logout_col = st.columns([6, 1])
+with user_col:
+    st.markdown(
+        f'<div class="user-chip">Conectado: {html.escape(str(user_name))}</div>',
+        unsafe_allow_html=True,
+    )
+with logout_col:
+    st.button("Sair", use_container_width=True, on_click=st.logout)
+
+panels = resolve_panels()
+if not panels:
+    st.error("Nenhum HTML de painel foi encontrado. Coloque os arquivos na mesma pasta do app.py.")
+    st.stop()
+
+# Uma aba por HTML. Novos arquivos são adicionados em HTML_PANELS.
+tabs = st.tabs([panel["label"] for panel in panels])
+for tab, panel in zip(tabs, panels):
+    with tab:
+        render_panel(panel)
