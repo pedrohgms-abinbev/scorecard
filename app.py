@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-CLIENT_ID = "2609a149-fd2a-409a-a4b6-700c940a1f74"
+CLIENT_ID = "301a8057-a1a3-4174-bfb9-5b4996dc7fd8"
 TENANT_ID = "cef04b19-7776-4a94-b89b-375c77a8f936"
 
 QUERY_PARAMS = st.query_params
