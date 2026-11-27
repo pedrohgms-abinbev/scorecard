@@ -39,7 +39,7 @@ if "code" not in QUERY_PARAMS and not st.session_state.get("autenticado"):
             f"""
             <div class="auth-card">
                 <div class="auth-brand">
-                    <img src="data:image/png;base64,{logo_base64}" alt="Logo HUB Comercial">
+                    <alt="Logo HUB Comercial">
                 </div>
                 <div class="auth-divider"></div>
                 <h1>HUB Comercial</h1>
