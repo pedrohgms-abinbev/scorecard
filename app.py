@@ -30,9 +30,7 @@ if "code" not in QUERY_PARAMS and not st.session_state.get("autenticado"):
     )
 
     
-    load_css()
-    logo_base64 = imagem_para_base64("images/logo.png")
-
+    
     st.markdown('<div class="auth-spacer"></div>', unsafe_allow_html=True)
     left_space, auth_card, right_space = st.columns([1, 1.45, 1])
 
