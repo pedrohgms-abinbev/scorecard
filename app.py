@@ -14,10 +14,60 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-CLIENT_ID = "301a8057-a1a3-4174-bfb9-5b4996dc7fd8"
+CLIENT_ID = "2609a149-fd2a-409a-a4b6-700c940a1f74"
 TENANT_ID = "cef04b19-7776-4a94-b89b-375c77a8f936"
-APP_URL = "https://ecossistemagestaooffco.streamlit.app/"
-REDIRECT_URI = f"{APP_URL.rstrip('/')}"
+
+QUERY_PARAMS = st.query_params
+
+if "code" not in QUERY_PARAMS and not st.session_state.get("autenticado"):
+
+    login_url = (
+        f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/authorize"
+        f"?client_id={CLIENT_ID}"
+        f"&response_type=code"
+        f"&redirect_uri=https://ecossistemagestaooffco.streamlit.app/"
+        f"&scope=openid profile email User.Read"
+    )
+
+    
+    load_css()
+    logo_base64 = imagem_para_base64("images/logo.png")
+
+    st.markdown('<div class="auth-spacer"></div>', unsafe_allow_html=True)
+    left_space, auth_card, right_space = st.columns([1, 1.45, 1])
+
+    with auth_card:
+        st.markdown(
+            f"""
+            <div class="auth-card">
+                <div class="auth-brand">
+                    <img src="data:image/png;base64,{logo_base64}" alt="Logo HUB Comercial">
+                </div>
+                <div class="auth-divider"></div>
+                <h1>HUB Comercial</h1>
+                <p class="auth-subtitle">Geo CO</p>
+                <p class="auth-description">
+                    Acesse o portal para consultar informações comerciais.
+                </p>
+                <a class="auth-button" href="{login_url}">
+                    <span class="microsoft-mark" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span>
+                    </span>
+                    <span>Entrar com Microsoft</span>
+                </a>
+                <p class="auth-security">
+                    Conexão segura com sua conta corporativa
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    st.stop()
+
+st.session_state.autenticado = True
+
+#st.success("Usuário autenticado")
 
 BASE_DIR = Path(__file__).resolve().parent
 
