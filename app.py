@@ -202,20 +202,6 @@ try:
 except Exception:
     auth_ready = False
 
-if not auth_ready:
-    st.error("Configure a seção [auth] do .streamlit/secrets.toml para habilitar o SSO Microsoft.")
-    st.code(
-        f"[auth]\nredirect_uri = \"{REDIRECT_URI}\"\ncookie_secret = \"GERE_UM_SEGREDO_ALEATORIO_FORTE\"\nclient_id = \"{CLIENT_ID}\"\nclient_secret = \"COLE_AQUI_O_CLIENT_SECRET_DO_ENTRA_ID\"\nserver_metadata_url = \"https://login.microsoftonline.com/{TENANT_ID}/v2.0/.well-known/openid-configuration\"",
-        language="toml",
-    )
-    st.info("Mantenha as configurações existentes do Excel no secrets.toml. Apenas acrescente esta seção [auth].")
-    st.stop()
-
-# Não aceite apenas a presença de ?code= na URL como prova de autenticação.
-if not st.user.is_logged_in:
-    show_login()
-    st.stop()
-
 user_name = (
     getattr(st.user, "name", None)
     or getattr(st.user, "preferred_username", None)
